@@ -1,7 +1,4 @@
 import { Application } from 'https://deno.land/x/oak/mod.ts';
-import { config } from 'https://deno.land/x/dotenv/mod.ts';
-
-console.log(config());
 
 import todosRoutes from './routes/todos.ts';
 import { connect } from './helpers/db_client.ts';

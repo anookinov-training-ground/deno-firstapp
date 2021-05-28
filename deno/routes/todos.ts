@@ -1,4 +1,5 @@
 import { Router } from 'https://deno.land/x/oak/mod.ts';
+import { Bson } from 'https://deno.land/x/mongo/mod.ts';
 
 import { getDb } from '../helpers/db_client.ts';
 
@@ -14,7 +15,7 @@ interface TodoSchema {
   text: string;
 }
 
-let todos: Todo[] = [];
+// let todos: Todo[] = [];
 
 router.get('/todos', async (ctx) => {
   const todos = await getDb().collection('todos').find(); // { _id: ObjectId(), text: '...' }[]
@@ -42,18 +43,28 @@ router.post('/todos', async (ctx) => {
 });
 
 router.put('/todos/:todoId', async (ctx) => {
-  const tid = ctx.params.todoId;
+  const tid = ctx.params.todoId!;
   const data = await ctx.request.body().value;
-  const todoIndex = todos.findIndex((todo) => {
-    return todo.id === tid;
-  });
-  todos[todoIndex] = { id: todos[todoIndex].id, text: data.text };
+
+  await getDb()
+    .collection('todos')
+    .updateOne({ _id: new Bson.ObjectId(tid) }, { $set: { text: data.text } });
+
+  // const todoIndex = todos.findIndex((todo) => {
+  //   return todo.id === tid;
+  // });
+  // todos[todoIndex] = { id: todos[todoIndex].id, text: data.text };
   ctx.response.body = { message: 'Updated todo' };
 });
 
-router.delete('/todos/:todoId', (ctx) => {
-  const tid = ctx.params.todoId;
-  todos = todos.filter((todo) => todo.id !== tid);
+router.delete('/todos/:todoId', async (ctx) => {
+  const tid = ctx.params.todoId!;
+
+  await getDb()
+    .collection('todos')
+    .deleteOne({ _id: new Bson.ObjectId(tid) });
+
+  // todos = todos.filter((todo) => todo.id !== tid);
   ctx.response.body = { message: 'Deleted todo' };
 });
 
